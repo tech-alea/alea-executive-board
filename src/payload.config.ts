@@ -3,7 +3,7 @@ import { vercelPostgresAdapter } from '@payloadcms/db-vercel-postgres'
 
 import sharp from 'sharp' // sharp-import
 import path from 'path'
-import { buildConfig, PayloadRequest } from 'payload'
+import { buildConfig, PayloadHandler, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
 import { Categories } from './collections/Categories'
@@ -16,6 +16,8 @@ import { Header } from './Header/config'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { sendEmailHandler } from './app/api/sendEmail'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -96,4 +98,23 @@ export default buildConfig({
     },
     tasks: [],
   },
+  email: nodemailerAdapter({
+    defaultFromAddress: 'gianluca.larosa@aleatrieste.it',
+    defaultFromName: 'Gianluca',
+    transportOptions: {
+      host: process.env.GMAIL_SMTP_HOST,
+      port: process.env.GMAIL_SMTP_PORT,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      }
+    }
+  }),
+  endpoints: [
+    {
+      path: '/send-email',
+      method: 'post',
+      handler: sendEmailHandler as unknown as PayloadHandler
+    }
+  ]
 })
